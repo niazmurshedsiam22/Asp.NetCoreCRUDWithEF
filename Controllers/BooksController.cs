@@ -45,10 +45,15 @@ namespace WebApplication2.Controllers
         {
 
             BooksViewModel booksViewModel = new BooksViewModel();
+
             if (id > 0)
             {
-                booksViewModel = FetchBookById(id);
+                booksViewModel = FitchBookById(id);
             }
+            //if (id > 0)
+            //{
+            //    booksViewModel = FetchBookById(id);
+            //}
 
             return View(booksViewModel);
         }
@@ -89,10 +94,10 @@ namespace WebApplication2.Controllers
         // GET: Books/Delete/5
         public IActionResult Delete(int? id)
         {
-            
+            BooksViewModel booksViewModel = FitchBookById(id);
             
 
-            return View();
+            return View(booksViewModel);
         }
 
         // POST: Books/Delete/5
@@ -100,33 +105,71 @@ namespace WebApplication2.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            
+            using (SqlConnection cnn = new SqlConnection(_configuration.GetConnectionString("DevConnection")))
+            {
+                cnn.Open();
+                //-----Delete-----
+
+                SqlCommand cmd = new SqlCommand("BookDeleteByID", cnn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("BookID", id);
+               
+                cmd.ExecuteNonQuery();
+
+
+            }
             return RedirectToAction(nameof(Index));
         }
         [NonAction]
-        public BooksViewModel FetchBookById(int? id)
+        public BooksViewModel FitchBookById(int? id)
         {
             BooksViewModel booksViewModel = new BooksViewModel();
             using (SqlConnection cnn = new SqlConnection(_configuration.GetConnectionString("DevConnection")))
             {
                 DataTable dt = new DataTable();
                 cnn.Open();
-                //-----Read-----
+
+                //------Update-----
+                
                 SqlDataAdapter sda = new SqlDataAdapter("BookViewByID", cnn);
                 sda.SelectCommand.CommandType = CommandType.StoredProcedure;
                 sda.SelectCommand.Parameters.AddWithValue("BookID",id);
                 sda.Fill(dt);
-                if (dt.Rows.Count == 1)
+                if(dt.Rows.Count == 1)
                 {
-                    booksViewModel.BookID = Convert.ToInt32(dt.Rows[0]["BookID"].ToString());
+                    booksViewModel.BookID = Convert.ToInt32(dt.Rows[0]["BookID"].ToString()); 
                     booksViewModel.BookTitle = dt.Rows[0]["BookTitle"].ToString();
                     booksViewModel.BookAutor = dt.Rows[0]["BookAutor"].ToString();
                     booksViewModel.BookPrice = Convert.ToInt32(dt.Rows[0]["BookPrice"].ToString());
-
                 }
-                return booksViewModel;
             }
+            return booksViewModel;
         }
+
+        //[NonAction]
+        //public BooksViewModel FetchBookById(int? id)
+        //{
+        //    BooksViewModel booksViewModel = new BooksViewModel();
+        //    using (SqlConnection cnn = new SqlConnection(_configuration.GetConnectionString("DevConnection")))
+        //    {
+        //        DataTable dt = new DataTable();
+        //        cnn.Open();
+        //        //-----Read-----
+        //        SqlDataAdapter sda = new SqlDataAdapter("BookViewByID", cnn);
+        //        sda.SelectCommand.CommandType = CommandType.StoredProcedure;
+        //        sda.SelectCommand.Parameters.AddWithValue("BookID",id);
+        //        sda.Fill(dt);
+        //        if (dt.Rows.Count == 1)
+        //        {
+        //            booksViewModel.BookID = Convert.ToInt32(dt.Rows[0]["BookID"].ToString());
+        //            booksViewModel.BookTitle = dt.Rows[0]["BookTitle"].ToString();
+        //            booksViewModel.BookAutor = dt.Rows[0]["BookAutor"].ToString();
+        //            booksViewModel.BookPrice = Convert.ToInt32(dt.Rows[0]["BookPrice"].ToString());
+
+        //        }
+        //        return booksViewModel;
+        //    }
+        //}
 
         
     }
