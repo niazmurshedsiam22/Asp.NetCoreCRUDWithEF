@@ -25,7 +25,16 @@ namespace WebApplication2.Controllers
         // GET: Books
         public IActionResult Index()
         {
-            return View();
+            DataTable dt = new DataTable();
+            using (SqlConnection cnn = new SqlConnection(_configuration.GetConnectionString("DevConnection")))
+            {
+                cnn.Open();
+                //-----Read-----
+                SqlDataAdapter sda = new SqlDataAdapter("BookViewAll", cnn);
+                sda.SelectCommand.CommandType = CommandType.StoredProcedure;
+                sda.Fill(dt);
+            }
+            return View(dt);
         }
 
 
@@ -52,18 +61,23 @@ namespace WebApplication2.Controllers
 
             if (ModelState.IsValid)
             {
+                DataTable dt = new DataTable();
                 using (SqlConnection cnn = new SqlConnection(_configuration.GetConnectionString("DevConnection")))
                 {
                     cnn.Open();
+                    //-----insert(create)-----
+
                     SqlCommand cmd = new SqlCommand("BookAddOrEdit", cnn);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("BookID",booksViewModel.BookID);
+                    cmd.Parameters.AddWithValue("BookID", booksViewModel.BookID);
                     cmd.Parameters.AddWithValue("BookTitle", booksViewModel.BookTitle);
                     cmd.Parameters.AddWithValue("BookAutor", booksViewModel.BookAutor);
                     cmd.Parameters.AddWithValue("BookPrice", booksViewModel.BookPrice);
                     cmd.ExecuteNonQuery();
+
+                    
                 }
-                
+
                 return RedirectToAction(nameof(Index));
             }
             return View(booksViewModel);
