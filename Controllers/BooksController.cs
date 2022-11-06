@@ -45,7 +45,10 @@ namespace WebApplication2.Controllers
         {
 
             BooksViewModel booksViewModel = new BooksViewModel();
-            
+            if (id > 0)
+            {
+                booksViewModel = FetchBookById(id);
+            }
 
             return View(booksViewModel);
         }
@@ -99,6 +102,30 @@ namespace WebApplication2.Controllers
         {
             
             return RedirectToAction(nameof(Index));
+        }
+        [NonAction]
+        public BooksViewModel FetchBookById(int? id)
+        {
+            BooksViewModel booksViewModel = new BooksViewModel();
+            using (SqlConnection cnn = new SqlConnection(_configuration.GetConnectionString("DevConnection")))
+            {
+                DataTable dt = new DataTable();
+                cnn.Open();
+                //-----Read-----
+                SqlDataAdapter sda = new SqlDataAdapter("BookViewByID", cnn);
+                sda.SelectCommand.CommandType = CommandType.StoredProcedure;
+                sda.SelectCommand.Parameters.AddWithValue("BookID",id);
+                sda.Fill(dt);
+                if (dt.Rows.Count == 1)
+                {
+                    booksViewModel.BookID = Convert.ToInt32(dt.Rows[0]["BookID"].ToString());
+                    booksViewModel.BookTitle = dt.Rows[0]["BookTitle"].ToString();
+                    booksViewModel.BookAutor = dt.Rows[0]["BookAutor"].ToString();
+                    booksViewModel.BookPrice = Convert.ToInt32(dt.Rows[0]["BookPrice"].ToString());
+
+                }
+                return booksViewModel;
+            }
         }
 
         
